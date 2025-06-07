@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CLOUD NATIVE MONITORING</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(120deg, #e0eafc, #cfdef3);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(40, 116, 69, 0.12);
+            padding: 32px 24px 24px 24px;
+        }
+        h1 {
+            text-align: center;
+            color: #287445;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .plotly-graph-div {
+            margin: 32px auto 24px auto;
+            width: 100%;
+            max-width: 400px;
+            background-color: rgba(151, 128, 128, 0.10);
+            padding: 20px 10px 10px 10px;
+            border-radius: 12px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px 2vw;
+            }
+            .plotly-graph-div {
+                max-width: 98vw;
+                padding: 10px 2vw;
+            }
+        }
+        .alert {
+            margin: 20px auto;
+            max-width: 400px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SYSTEM MONITORING</h1><hr>
+        <div style="text-align:center; margin-bottom: 18px;">
+            <button id="refresh-btn" style="background:#287445;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(40,116,69,0.08);transition:background 0.2s;">Refresh</button>
+        </div>
+        <div id="cpu-gauge" class="plotly-graph-div"></div>
+        <div id="mem-gauge" class="plotly-graph-div"></div>
+        {% if message %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
+    </div>
+    <script>
+        // Ensure Jinja variables are injected as numbers
+        var cpuMetric = Number({{ cpu_metric|tojson }});
+
+        var memMetric = Number({{ mem_metric|tojson }});
+
+        var cpuGauge = {
+            type: "indicator",
+            mode: "gauge+number",
+            value: cpuMetric,
+            gauge: {
+                axis: { range: [null, 100] },
+                bar: { color: "#1f77b4" },
+                bgcolor: "white",
+                borderwidth: 2,
+                bordercolor: "#ccc",
+                steps: [
+                    { range: [0, 50], color: "#d9f0a3" },
+                    { range: [50, 85], color: "#ffeb84" },
+                    { range: [85, 100], color: "#ff5f5f" }
+                ],
+                threshold: {
+                    line: { color: "red", width: 4 },
+                    thickness: 0.75,
+                    value: cpuMetric
+                }
+            }
+        };
+        var memGauge = {
+            type: "indicator",
+            mode: "gauge+number",
+            value: memMetric,
+            gauge: {
+                axis: { range: [null, 100] },
+                bar: { color: "#1f77b4" },
+                bgcolor: "white",
+                borderwidth: 2,
+                bordercolor: "#ccc",
+                steps: [
+                    { range: [0, 50], color: "#d9f0a3" },
+                    { range: [50, 85], color: "#ffeb84" },
+                    { range: [85, 100], color: "#ff5f5f" }
+                ],
+                threshold: {
+                    line: { color: "red", width: 4 },
+                    thickness: 0.75,
+                    value: memMetric
+                }
+            }
+        };
+        var cpuGaugeLayout = {
+            title: { text: "CPU UTILIZATION", font: { size: 20, color: '#287445', family: 'Arial, sans-serif' } },
+            margin: { t: 60, b: 0, l: 0, r: 0 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Arial, sans-serif', size: 16, color: '#333' }
+        };
+        var memGaugeLayout = {
+            title: { text: "MEMORY UTILIZATION", font: { size: 20, color: '#287445', family: 'Arial, sans-serif' } },
+            margin: { t: 60, b: 0, l: 0, r: 0 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Arial, sans-serif', size: 16, color: '#333' }
+        };
+        Plotly.newPlot('cpu-gauge', [cpuGauge], cpuGaugeLayout, {displayModeBar: false});
+        Plotly.newPlot('mem-gauge', [memGauge], memGaugeLayout, {displayModeBar: false});
+
+        document.getElementById('refresh-btn').onclick = function() { location.reload(); };
+    </script>
+</body>
+</html>
